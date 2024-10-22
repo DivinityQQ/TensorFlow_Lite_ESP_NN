@@ -24,6 +24,7 @@ limitations under the License.
 // you're targeting. For example, see the Cortex M bare metal version in
 // tensorflow/lite/micro/bluepill/micro_time.cc
 
+#include <Arduino.h>
 #include "tensorflow/lite/micro/micro_time.h"
 
 #if defined(TF_LITE_USE_CTIME)
@@ -44,7 +45,7 @@ uint32_t ticks_per_second() { return 0; }
 // required for a platform to support Tensorflow Lite for Microcontrollers
 // profiling. This returns 0 by default because timing is an optional feature
 // that builds without errors on platforms that do not need it.
-uint32_t GetCurrentTimeTicks() { return 0; }
+uint32_t GetCurrentTimeTicks() { return micros(); }
 
 #else  // defined(TF_LITE_USE_CTIME)
 
