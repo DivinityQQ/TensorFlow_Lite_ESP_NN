@@ -76,10 +76,8 @@ void MicroProfiler::LogCsv() const {
 #endif
 }
 
-void MicroProfiler::LogTicksPerTagCsv() {
+void MicroProfiler::LogTicksPerTag() {
 #if !defined(TF_LITE_STRIP_ERROR_STRINGS)
-  MicroPrintf(
-      "\"Unique Tag\",\"Total ticks across all events with that tag.\"");
   int total_ticks = 0;
   for (int i = 0; i < num_events_; ++i) {
     uint32_t ticks = end_ticks_[i] - start_ticks_[i];
@@ -97,9 +95,8 @@ void MicroProfiler::LogTicksPerTagCsv() {
     if (each_tag_entry.tag == nullptr) {
       break;
     }
-    MicroPrintf("%s, %d", each_tag_entry.tag, each_tag_entry.ticks);
+    MicroPrintf("%s took %u ticks (%d ms)", each_tag_entry.tag, each_tag_entry.ticks, TicksToMs(each_tag_entry.ticks));
   }
-  MicroPrintf("\"total number of ticks\", %d", total_ticks);
 #endif
 }
 
@@ -122,10 +119,11 @@ int MicroProfiler::FindExistingOrNextPosition(const char* tag_name) {
 }
 
 void MicroProfiler::ClearEvents() {
-  for (int i = 0; i < num_events_; i++) {
+  for (int i = 0; i < kMaxEvents; i++) { // Iterate up to kMaxEvents for clearing
     total_ticks_per_tag_[i].tag = nullptr;
+    total_ticks_per_tag_[i].ticks = 0; // Clear ticks as well
   }
-
+  
   num_events_ = 0;
 }
 
