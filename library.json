@@ -1,6 +1,6 @@
 {
-    "name": "ESP_TF",
-    "version": "2.0.1",
+    "name": "TensorFlow_Lite_ESP_NN",
+    "version": "2.1.0",
     "build": {
       "srcDir": "src",
       "includeDir": "src"
