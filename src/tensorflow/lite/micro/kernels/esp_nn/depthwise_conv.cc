@@ -42,7 +42,8 @@ struct NodeData {
 #endif
 };
 
-void* Init(TfLiteContext* context, const char* buffer, size_t length) {
+void* Init(TfLiteContext* context, const char* buffer,
+                        size_t length) {
   TFLITE_DCHECK(context->AllocatePersistentBuffer != nullptr);
   return context->AllocatePersistentBuffer(context, sizeof(NodeData));
 }
@@ -113,13 +114,16 @@ inline void EvalQuantizedPerChannel(TfLiteContext* context, TfLiteNode* node,
 
     data_dims_t input_dims =  {
                                 .width = input_width, .height = input_height,
-                                .channels = input_depth, 1
+                                .channels = input_depth, .extra = 1
                               };
     data_dims_t output_dims = {
                                 .width = output_width, .height = output_height,
-                                .channels = output_depth, 1
+                                .channels = output_depth, .extra = 1
                               };
-    data_dims_t filter_dims = {.width = filter_width, .height = filter_height, 0, 0};
+    data_dims_t filter_dims = {
+                                .width = filter_width, .height = filter_height,
+                                .channels = 0, .extra = 0
+                              };
     dw_conv_params_t conv_params =  {
                                       .in_offset = input_offset, .out_offset = output_offset,
                                       .ch_mult = depth_multiplier,
@@ -166,15 +170,15 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
 
   MicroContext* micro_context = GetMicroContext(context);
 
+  TfLiteTensor* output =
+      micro_context->AllocateTempOutputTensor(node, kDepthwiseConvOutputTensor);
+  TF_LITE_ENSURE(context, output != nullptr);
   TfLiteTensor* input =
       micro_context->AllocateTempInputTensor(node, kDepthwiseConvInputTensor);
   TF_LITE_ENSURE(context, input != nullptr);
   TfLiteTensor* filter =
       micro_context->AllocateTempInputTensor(node, kDepthwiseConvWeightsTensor);
   TF_LITE_ENSURE(context, filter != nullptr);
-  TfLiteTensor* output =
-      micro_context->AllocateTempOutputTensor(node, kDepthwiseConvOutputTensor);
-  TF_LITE_ENSURE(context, output != nullptr);
 
   // Check dimensionality of input, filter, output
   TF_LITE_ENSURE_EQ(context, input->dims->size, 4);
@@ -253,13 +257,16 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
   if (input->type == kTfLiteInt8) {
     data_dims_t input_dims =  {
                                 .width = input_width, .height = input_height,
-                                .channels = num_input_channels, 1
+                                .channels = num_input_channels, .extra = 1
                               };
     data_dims_t output_dims = {
                                 .width = output_width, .height = output_height,
-                                .channels = output->dims->data[3], 1
+                                .channels = output->dims->data[3], .extra = 1
                               };
-    data_dims_t filter_dims = {.width = filter_width, .height = filter_height, 0, 0};
+    data_dims_t filter_dims = {
+                                .width = filter_width, .height = filter_height,
+                                .channels = 0, .extra = 0
+                              };
     dw_conv_params_t conv_params =  {
                                       .in_offset = 0, .out_offset = 0,
                                       .ch_mult = params.depth_multiplier,
@@ -410,7 +417,8 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
 }  // namespace
 
 TFLMRegistration Register_DEPTHWISE_CONV_2D() {
-  return tflite::micro::RegisterOp(Init, Prepare, Eval);
+  return tflite::micro::RegisterOp(Init, Prepare,
+                                   Eval);
 }
 
 }  // namespace tflite
