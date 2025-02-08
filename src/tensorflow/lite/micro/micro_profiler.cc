@@ -97,6 +97,7 @@ void MicroProfiler::LogTicksPerTag() {
     }
     MicroPrintf("%s took %u ticks (%d ms)", each_tag_entry.tag, each_tag_entry.ticks, TicksToMs(each_tag_entry.ticks));
   }
+  MicroPrintf("##############################################");
 #endif
 }
 
